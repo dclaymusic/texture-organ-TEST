@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Texture + Sound Trigger</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      background: white;
+    }
+    body {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-rows: 100vh;
+      overflow: hidden;
+    }
+    #left, #middle, #right {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+    #left  { background-color: black; }
+    #middle{ background-color: white; }
+    #right { background-color: black; }
+    .overlay-image {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 50%;
+      height: 50%;
+      transform: translate(-50%, -50%);
+      object-fit: contain;
+      z-index: 10;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+<div id="left"></div>
+<div id="middle"></div>
+<div id="right"></div>
+
+<script>
+  const leftContainer = document.getElementById("left");
+  const middleContainer = document.getElementById("middle");
+  const rightContainer = document.getElementById("right");
+
+  const keyToMediaMap = {
+    /* LEFT */
+    "Digit1": { side: "left", image: "left-a1.png", sound: "left-a1.mp3" },
+    "Digit2": { side: "left", image: "left-d1.png", sound: "left-d1.mp3" },
+    "Digit3": { side: "left", image: "left-c1.png", sound: "left-c1.mp3" },
+    "Digit4": { side: "left", image: "left-b1.png", sound: "left-b1.mp3" },
+    "Digit5": { side: "left", image: "left-a2.png", sound: "left-a2.mp3" },
+    "Digit6": { side: "left", image: "left-b2.png", sound: "left-b2.mp3" },
+    "KeyQ":   { side: "left", image: "left-c2.png", sound: "left-c2.mp3" },
+    "KeyW":   { side: "left", image: "left-d2.png", sound: "left-d2.mp3" },
+    "KeyE":   { side: "left", image: "left-a3.png", sound: "left-a3.mp3" },
+    "KeyR":   { side: "left", image: "left-b3.png", sound: "left-b3.mp3" },
+    "KeyT":   { side: "left", image: "left-c3.png", sound: "left-c3.mp3" },
+    "KeyY":   { side: "left", image: "left-d3.png", sound: "left-d3.mp3" },
+    "KeyA":   { side: "left", image: "left-a4.png", sound: "left-a4.mp3" },
+    "KeyS":   { side: "left", image: "left-b4.png", sound: "left-b4.mp3" },
+    "KeyD":   { side: "left", image: "left-c4.png", sound: "left-c4.mp3" },
+    "KeyF":   { side: "left", image: "left-d4.png", sound: "left-d4.mp3" },
+    "KeyG":   { side: "left", image: "left-a5.png", sound: "left-a5.mp3" },
+    "KeyH":   { side: "left", image: "left-b5.png", sound: "left-b5.mp3" },
+    "KeyZ":   { side: "left", image: "left-c5.png", sound: "left-c5.mp3" },
+    "KeyX":   { side: "left", image: "left-d5.png", sound: "left-d5.mp3" },
+    "KeyC":   { side: "left", image: "left-a6.png", sound: "left-a6.mp3" },
+    "KeyV":   { side: "left", image: "left-b6.png", sound: "left-b6.mp3" },
+    "KeyB":   { side: "left", image: "left-c6.png", sound: "left-c6.mp3" },
+
+    /* MIDDLE */
+    "Digit7":       { side: "middle", image: "middle-a1.png", sound: "middle-a1.mp3" },
+    "Digit8":       { side: "middle", image: "middle-d1.png", sound: "middle-d1.mp3" },
+    "Digit9":       { side: "middle", image: "middle-c1.png", sound: "middle-c1.mp3" },
+    "Digit0":       { side: "middle", image: "middle-b1.png", sound: "middle-b1.mp3" },
+    "Minus":        { side: "middle", image: "middle-a2.png", sound: "middle-a2.mp3" },
+    "Equal":        { side: "middle", image: "middle-b2.png", sound: "middle-b2.mp3" },
+    "KeyU":         { side: "middle", image: "middle-c2.png", sound: "middle-c2.mp3" },
+    "KeyI":         { side: "middle", image: "middle-d2.png", sound: "middle-d2.mp3" },
+    "KeyO":         { side: "middle", image: "middle-a3.png", sound: "middle-a3.mp3" },
+    "KeyP":         { side: "middle", image: "middle-b3.png", sound: "middle-b3.mp3" },
+    "BracketLeft":  { side: "middle", image: "middle-c3.png", sound: "middle-c3.mp3" },
+    "BracketRight": { side: "middle", image: "middle-d3.png", sound: "middle-d3.mp3" },
+    "KeyJ":         { side: "middle", image: "middle-a4.png", sound: "middle-a4.mp3" },
+    "KeyK":         { side: "middle", image: "middle-b4.png", sound: "middle-b4.mp3" },
+    "KeyL":         { side: "middle", image: "middle-c4.png", sound: "middle-c4.mp3" },
+    "Semicolon":    { side: "middle", image: "middle-d4.png", sound: "middle-d4.mp3" },
+    "Quote":        { side: "middle", image: "middle-a5.png", sound: "middle-a5.mp3" },
+    "Backslash":    { side: "middle", image: "middle-b5.png", sound: "middle-b5.mp3" },
+    "KeyN":         { side: "middle", image: "middle-c5.png", sound: "middle-c5.mp3" },
+    "KeyM":         { side: "middle", image: "middle-d5.png", sound: "middle-d5.mp3" },
+    "Comma":        { side: "middle", image: "middle-a6.png", sound: "middle-a6.mp3" },
+    "Period":       { side: "middle", image: "middle-b6.png", sound: "middle-b6.mp3" },
+    "Slash":        { side: "middle", image: "middle-c6.png", sound: "middle-c6.mp3" },
+
+    /* RIGHT */
+    "MetaRight":      { side: "right", image: "right-a1.png", sound: "right-a1.mp3" },
+    "MetaLeft":       { side: "right", image: "right-d1.png", sound: "right-d1.mp3" },
+    "ShiftRight":     { side: "right", image: "right-c1.png", sound: "right-c1.mp3" },
+    "ShiftLeft":      { side: "right", image: "right-b1.png", sound: "right-b1.mp3" },
+    "NumLock":        { side: "right", image: "right-a2.png", sound: "right-a2.mp3" },
+    "NumpadDivide":   { side: "right", image: "right-b2.png", sound: "right-b2.mp3" },
+    "NumpadMultiply": { side: "right", image: "right-c2.png", sound: "right-c2.mp3" },
+    "Backspace":      { side: "right", image: "right-d2.png", sound: "right-d2.mp3" },
+    "Numpad7":        { side: "right", image: "right-a3.png", sound: "right-a3.mp3" },
+    "Numpad8":        { side: "right", image: "right-b3.png", sound: "right-b3.mp3" },
+    "Numpad9":        { side: "right", image: "right-c3.png", sound: "right-c3.mp3" },
+    "NumpadSubtract": { side: "right", image: "right-d3.png", sound: "right-d3.mp3" },
+    "Numpad4":        { side: "right", image: "right-a4.png", sound: "right-a4.mp3" },
+    "Numpad5":        { side: "right", image: "right-b4.png", sound: "right-b4.mp3" },
+    "Numpad6":        { side: "right", image: "right-c4.png", sound: "right-c4.mp3" },
+    "NumpadAdd":      { side: "right", image: "right-d4.png", sound: "right-d4.mp3" },
+    "Numpad1":        { side: "right", image: "right-a5.png", sound: "right-a5.mp3" },
+    "Numpad2":        { side: "right", image: "right-b5.png", sound: "right-b5.mp3" },
+    "Numpad3":        { side: "right", image: "right-c5.png", sound: "right-c5.mp3" },
+    "NumpadEnter":    { side: "right", image: "right-d5.png", sound: "right-d5.mp3" },
+    "Numpad0":        { side: "right", image: "right-a6.png", sound: "right-a6.mp3" },
+    "Space":          { side: "right", image: "right-b6.png", sound: "right-b6.mp3" },
+    "NumpadDecimal":  { side: "right", image: "right-c6.png", sound: "right-c6.mp3" }
+  };
+
+  const activeKeys = new Set();
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const bufferCache = new Map();
+  const activeAudio = {};
+  const FADE_TIME = 0.25;
+
+  async function loadBuffer(url) {
+    if (bufferCache.has(url)) return bufferCache.get(url);
+    const res = await fetch(url);
+    const arr = await res.arrayBuffer();
+    const buf = await audioCtx.decodeAudioData(arr);
+    bufferCache.set(url, buf);
+    return buf;
+  }
+
+  function appendImage(target, mapping) {
+    const img = document.createElement("img");
+    img.src = mapping.image;
+    img.className = "overlay-image";
+    target.appendChild(img);
+  }
+
+  function updateOverlays() {
+    leftContainer.innerHTML = "";
+    middleContainer.innerHTML = "";
+    rightContainer.innerHTML = "";
+    activeKeys.forEach((code) => {
+      const mapping = keyToMediaMap[code];
+      if (!mapping) return;
+      if (mapping.side === "left") appendImage(leftContainer, mapping);
+      else if (mapping.side === "middle") appendImage(middleContainer, mapping);
+      else appendImage(rightContainer, mapping);
+    });
+  }
+
+  async function startSound(code) {
+    const mapping = keyToMediaMap[code];
+    if (!mapping || activeAudio[code]) return;
+    if (audioCtx.state === "suspended") await audioCtx.resume();
+    const buffer = await loadBuffer(mapping.sound);
+    const source = audioCtx.createBufferSource();
+    source.buffer = buffer;
+    source.loop = true;
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(1, audioCtx.currentTime); // start at full volume
+    source.connect(gain).connect(audioCtx.destination);
+    source.start();
+    activeAudio[code] = { source, gain };
+  }
+
+  function stopSound(code) {
+    const entry = activeAudio[code];
+    if (!entry) return;
+    const now = audioCtx.currentTime;
+    entry.gain.gain.cancelScheduledValues(now);
+    entry.gain.gain.setValueAtTime(entry.gain.gain.value, now);
+    entry.gain.gain.linearRampToValueAtTime(0, now + FADE_TIME);
+    setTimeout(() => {
+      try { entry.source.stop(); } catch {}
+      entry.source.disconnect();
+      entry.gain.disconnect();
+      delete activeAudio[code];
+    }, FADE_TIME * 1000);
+  }
+
+  document.addEventListener("keydown", (e) => {
+    const code = e.code;
+    if (keyToMediaMap[code] && !activeKeys.has(code)) {
+      activeKeys.add(code);
+      updateOverlays();
+      startSound(code);
+    }
+  });
+
+  document.addEventListener("keyup", (e) => {
+    const code = e.code;
+    if (activeKeys.delete(code)) {
+      updateOverlays();
+      stopSound(code);
+    }
+  });
+</script>
+
+</body>
+</html>
